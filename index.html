@@ -1,0 +1,233 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FashionKart</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f6f6f6;color:#222}
+header{background:#ff3f6c;color:#fff;padding:14px 16px;position:sticky;top:0;z-index:5}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:23px;margin:0}
+button{cursor:pointer;border:0;border-radius:7px;padding:11px 14px;font-size:14px}
+.header-btn{background:#fff;color:#d92555;margin-left:5px;font-weight:bold}
+.hero{padding:24px 16px;background:#ffe1e9;text-align:center}
+.hero h2{margin:0 0 8px}
+.search{width:100%;max-width:600px;padding:12px;border:1px solid #ddd;border-radius:8px;margin-top:12px;font-size:16px}
+.wrap{max-width:1000px;margin:auto;padding:16px}
+.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.product{background:#fff;border-radius:10px;padding:10px;box-shadow:0 2px 7px #0000000d}
+.product img{width:100%;height:190px;object-fit:cover;border-radius:7px;background:#eee}
+.product h3{font-size:16px;margin:10px 0 6px}
+.price{font-weight:bold;margin:8px 0}
+.buy{background:#ff3f6c;color:#fff;width:100%;font-weight:bold}
+.panel{display:none;position:fixed;inset:0;background:#f6f6f6;z-index:20;overflow:auto;padding:16px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.close{background:#222;color:white}
+.cart-item,.order-card{background:white;border-radius:9px;padding:14px;margin:10px 0;border:1px solid #eee}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.remove{background:#eee}
+.primary{background:#ff3f6c;color:white;width:100%;margin-top:12px;font-weight:bold}
+.input{display:block;width:100%;padding:12px;margin:9px 0;border:1px solid #ccc;border-radius:7px;font:inherit;background:white}
+label.payment{display:block;padding:12px;background:white;border-radius:7px;margin:8px 0}
+.muted{color:#666;font-size:13px;line-height:1.5}
+.status{font-weight:bold;color:#138344}
+.admin-login{max-width:420px;margin:40px auto;background:#fff;padding:22px;border-radius:12px}
+.admin-login h2{text-align:center}
+select{width:100%;padding:10px;margin-top:8px;border-radius:6px;border:1px solid #ccc;background:white}
+.success{text-align:center;background:white;padding:24px;border-radius:12px;margin:30px auto;max-width:500px}
+.success-icon{font-size:48px;color:#168344}
+@media(min-width:650px){.products{grid-template-columns:repeat(4,minmax(0,1fr))}.product img{height:220px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>🛍️ FashionKart</h1>
+    <div>
+      <button class="header-btn" onclick="openCart()">🛒 Cart (<span id="cartCount">0</span>)</button>
+      <button class="header-btn" onclick="openOrders()">📦 My Orders</button>
+      <button class="header-btn" onclick="openAdmin()">🔐 Admin</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <h2>Find your style ✨</h2>
+  <p>Everyday fashion at friendly prices</p>
+  <input class="search" id="searchBox" placeholder="Search products..." oninput="renderProducts()">
+</section>
+
+<main class="wrap">
+  <h2>Featured Products</h2>
+  <div class="products" id="products"></div>
+  <p class="muted">Demo shop: products and orders are stored only in this browser on this device.</p>
+</main>
+
+<!-- CART -->
+<section class="panel" id="cartPanel">
+  <div class="panel-head"><h2>🛒 My Cart</h2><button class="close" onclick="hidePanel('cartPanel')">✕ Close</button></div>
+  <div id="cartItems"></div>
+  <h3>Total: ₹<span id="cartTotal">0</span></h3>
+  <button class="primary" onclick="openCheckout()">Proceed to Checkout</button>
+</section>
+
+<!-- CHECKOUT -->
+<section class="panel" id="checkoutPanel">
+  <div class="panel-head"><h2>Checkout</h2><button class="close" onclick="hidePanel('checkoutPanel')">✕ Close</button></div>
+  <h3>Delivery details</h3>
+  <input class="input" id="customerName" placeholder="Full name">
+  <input class="input" id="customerPhone" type="tel" placeholder="Mobile number">
+  <textarea class="input" id="customerAddress" placeholder="Delivery address" rows="3"></textarea>
+  <input class="input" id="customerCity" placeholder="City">
+  <input class="input" id="customerPincode" inputmode="numeric" placeholder="PIN code">
+  <h3>Payment method</h3>
+  <label class="payment"><input type="radio" name="payment" value="Cash on Delivery" checked> Cash on Delivery</label>
+  <label class="payment"><input type="radio" name="payment" value="Online (demo only)"> Online payment (demo only — no money will be charged)</label>
+  <h3>Total: ₹<span id="checkoutTotal">0</span></h3>
+  <button class="primary" onclick="placeOrder()">Place Test Order</button>
+  <p class="muted">Use test details while learning. This demo does not send orders to a shop owner or process payments.</p>
+</section>
+
+<!-- MY ORDERS -->
+<section class="panel" id="ordersPanel">
+  <div class="panel-head"><h2>📦 My Orders</h2><button class="close" onclick="hidePanel('ordersPanel')">✕ Close</button></div>
+  <div id="myOrdersList"></div>
+</section>
+
+<!-- ADMIN -->
+<section class="panel" id="adminPanel">
+  <div class="panel-head"><h2>🔐 Admin Panel</h2><button class="close" onclick="hidePanel('adminPanel')">✕ Close</button></div>
+  <div id="adminLogin" class="admin-login">
+    <h2>Admin Login</h2>
+    <input class="input" id="adminUsername" placeholder="Username" autocomplete="off">
+    <input class="input" id="adminPassword" type="password" placeholder="Password">
+    <button class="primary" onclick="adminLogin()">Login</button>
+    <p id="loginError" style="color:#c00"></p>
+    <p class="muted">Demo credentials: admin / 1234. This is not secure and must not be used for a real shop.</p>
+  </div>
+  <div id="adminOrders" style="display:none">
+    <h3>All demo orders on this device</h3>
+    <button onclick="adminLogout()">Log out</button>
+    <div id="allOrdersList"></div>
+  </div>
+</section>
+
+<!-- SUCCESS -->
+<section class="panel" id="successPanel">
+  <div class="success">
+    <div class="success-icon">✓</div>
+    <h2>Test order placed!</h2>
+    <p>Your order ID: <strong id="successOrderId"></strong></p>
+    <p class="muted">This order is saved in this browser only.</p>
+    <button class="primary" onclick="hidePanel('successPanel');openOrders()">View My Orders</button>
+    <button class="primary" onclick="hidePanel('successPanel')">Continue Shopping</button>
+  </div>
+</section>
+
+<script>
+const productsData = [
+  {id:1,name:"Women's Dress",price:499,image:"Images/d1.jpg"},
+  {id:2,name:"Fashion Dress",price:599,image:"Images/d2.jpg"},
+  {id:3,name:"Women's Top",price:349,image:"Images/d3.jpg"},
+  {id:4,name:"Casual Shoes",price:699,image:"Images/d4.jpg"}
+];
+let cart = JSON.parse(localStorage.getItem("fashionCart") || "[]");
+let orders = JSON.parse(localStorage.getItem("fashionOrders") || "[]");
+
+function saveData(){
+  localStorage.setItem("fashionCart",JSON.stringify(cart));
+  localStorage.setItem("fashionOrders",JSON.stringify(orders));
+}
+function renderProducts(){
+  const q=document.getElementById("searchBox").value.toLowerCase();
+  const list=document.getElementById("products");
+  list.innerHTML="";
+  productsData.filter(p=>p.name.toLowerCase().includes(q)).forEach(p=>{
+    const card=document.createElement("div");
+    card.className="product";
+    const img=document.createElement("img");
+    img.src=p.image; img.alt=p.name;
+    img.onerror=function(){this.style.display="none";};
+    const title=document.createElement("h3"); title.textContent=p.name;
+    const price=document.createElement("div"); price.className="price"; price.textContent="₹"+p.price;
+    const btn=document.createElement("button"); btn.className="buy"; btn.textContent="Add to Cart";
+    btn.onclick=()=>addToCart(p.id);
+    card.append(img,title,price,btn); list.appendChild(card);
+  });
+}
+function addToCart(id){const p=productsData.find(x=>x.id===id);cart.push({id:p.id,name:p.name,price:p.price});saveData();updateCartCount();alert(p.name+" added to cart!");}
+function updateCartCount(){document.getElementById("cartCount").textContent=cart.length;}
+function hidePanel(id){document.getElementById(id).style.display="none";}
+function showPanel(id){document.querySelectorAll(".panel").forEach(p=>p.style.display="none");document.getElementById(id).style.display="block";}
+function openCart(){showPanel("cartPanel");renderCart();}
+function renderCart(){
+ const el=document.getElementById("cartItems");el.innerHTML="";
+ if(!cart.length){el.innerHTML="<p>Your cart is empty.</p>";}
+ cart.forEach((item,i)=>{const row=document.createElement("div");row.className="cart-item row";
+ const info=document.createElement("div");info.innerHTML="<strong></strong><p></p>";info.querySelector("strong").textContent=item.name;info.querySelector("p").textContent="₹"+item.price;
+ const btn=document.createElement("button");btn.className="remove";btn.textContent="Remove";btn.onclick=()=>{cart.splice(i,1);saveData();renderCart();updateCartCount();};
+ row.append(info,btn);el.appendChild(row);});
+ const total=cart.reduce((sum,item)=>sum+item.price,0);
+ document.getElementById("cartTotal").textContent=total;
+}
+function openCheckout(){if(!cart.length){alert("Your cart is empty!");return;}document.getElementById("checkoutTotal").textContent=cart.reduce((s,i)=>s+i.price,0);showPanel("checkoutPanel");}
+function placeOrder(){
+ const name=document.getElementById("customerName").value.trim();
+ const phone=document.getElementById("customerPhone").value.trim();
+ const address=document.getElementById("customerAddress").value.trim();
+ const city=document.getElementById("customerCity").value.trim();
+ const pin=document.getElementById("customerPincode").value.trim();
+ const payment=document.querySelector('input[name="payment"]:checked').value;
+ if(!name||!phone||!address||!city||!pin){alert("Please fill in all delivery details.");return;}
+ if(!/^\d{10}$/.test(phone)){alert("Enter a 10-digit mobile number.");return;}
+ if(!/^\d{6}$/.test(pin)){alert("Enter a 6-digit PIN code.");return;}
+ const total=cart.reduce((s,i)=>s+i.price,0);
+ const id="FK"+Date.now().toString().slice(-8);
+ orders.unshift({id,name,phone,address,city,pincode:pin,payment,total,status:"Order Placed",items:cart.map(x=>({...x})),date:new Date().toLocaleString()});
+ cart=[];saveData();updateCartCount();
+ document.getElementById("successOrderId").textContent=id;
+ ["customerName","customerPhone","customerAddress","customerCity","customerPincode"].forEach(x=>document.getElementById(x).value="");
+ showPanel("successPanel");
+}
+function openOrders(){showPanel("ordersPanel");renderMyOrders();}
+function renderMyOrders(){
+ const el=document.getElementById("myOrdersList");el.innerHTML="";
+ if(!orders.length){el.innerHTML="<p>No orders yet.</p>";return;}
+ orders.forEach(o=>{const c=document.createElement("div");c.className="order-card";
+ const h=document.createElement("h3");h.textContent="Order ID: "+o.id;c.appendChild(h);
+ const p=document.createElement("p");p.textContent="Total: ₹"+o.total+" · Payment: "+o.payment;c.appendChild(p);
+ const s=document.createElement("p");s.className="status";s.textContent="Status: "+o.status;c.appendChild(s);
+ const items=document.createElement("p");items.textContent="Items: "+o.items.map(i=>i.name).join(", ");c.appendChild(items);
+ const date=document.createElement("p");date.className="muted";date.textContent=o.date;c.appendChild(date);el.appendChild(c);});
+}
+function openAdmin(){showPanel("adminPanel");document.getElementById("adminLogin").style.display="block";document.getElementById("adminOrders").style.display="none";document.getElementById("loginError").textContent="";}
+function adminLogin(){
+ const u=document.getElementById("adminUsername").value;
+ const p=document.getElementById("adminPassword").value;
+ if(u==="admin"&&p==="1234"){
+  document.getElementById("adminLogin").style.display="none";
+  document.getElementById("adminOrders").style.display="block";
+  renderAdminOrders();
+ }else{document.getElementById("loginError").textContent="Wrong username or password";}
+}
+function adminLogout(){document.getElementById("adminOrders").style.display="none";document.getElementById("adminLogin").style.display="block";document.getElementById("adminPassword").value="";}
+function renderAdminOrders(){
+ const el=document.getElementById("allOrdersList");el.innerHTML="";
+ if(!orders.length){el.innerHTML="<p>No orders saved on this device yet. Place a test order first.</p>";return;}
+ orders.forEach(o=>{
+  const c=document.createElement("div");c.className="order-card";
+  const h=document.createElement("h3");h.textContent="Order ID: "+o.id;c.appendChild(h);
+  const add=(text)=>{const p=document.createElement("p");p.textContent=text;c.appendChild(p);};
+  add("Customer: "+o.name);add("Phone: "+o.phone);add("Address: "+o.address+", "+o.city+" - "+o.pincode);add("Payment: "+o.payment);add("Total: ₹"+o.total);add("Items: "+o.items.map(i=>i.name).join(", "));
+  const label=document.createElement("label");label.textContent="Order status";c.appendChild(label);
+  const select=document.createElement("select");
+  ["Order Placed","Packed","Shipped","Out for Delivery","Delivered","Cancelled"].forEach(status=>{const op=document.createElement("option");op.value=status;op.textContent=status;op.selected=o.status===status;select.appendChild(op);});
+  select.onchange=()=>{const found=orders.find(x=>x.id===o.id);if(found){found.status=select.value;saveData();renderAdminOrders();}};
+  c.appendChild(select);el.appendChild(c);
+ });
+}
+renderProducts();updateCartCount();
+</script>
+</body>
+</html>
